@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ölprovning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --amber: #C07A0A;
+    --amber-light: #FDF3E0;
+    --amber-mid: #E8A830;
+    --foam: #FFFDF7;
+    --bark: #3D2B1F;
+    --bark-mid: #6B4C35;
+    --text: #2A1F16;
+    --text-muted: #7A6558;
+    --border: rgba(61,43,31,0.12);
+    --border-strong: rgba(61,43,31,0.25);
+    --card-bg: #FFFFFF;
+    --bg: #FAF7F2;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(61,43,31,0.08);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bark);
+    color: var(--foam);
+    padding: 2.5rem 1.5rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--amber-mid), #F5C842, var(--amber-mid));
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+  }
+  header p {
+    font-size: 0.9rem;
+    opacity: 0.65;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* PARTICIPANT BAR */
+  #participant-bar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  #participant-bar label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  #participant-input {
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: var(--foam);
+    color: var(--text);
+    width: 180px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  #participant-input:focus { border-color: var(--amber); }
+  #participant-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .chip {
+    background: var(--amber-light);
+    color: var(--bark-mid);
+    border: 1px solid rgba(192,122,10,0.2);
+    border-radius: 20px;
+    padding: 4px 10px 4px 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: default;
+  }
+  .chip.active {
+    background: var(--amber);
+    color: white;
+    border-color: var(--amber);
+  }
+  .chip button {
+    background: none; border: none; cursor: pointer;
+    color: inherit; opacity: 0.7; font-size: 1rem;
+    padding: 0; line-height: 1; display: flex;
+  }
+  #add-participant {
+    background: var(--bark);
+    color: var(--foam);
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  #add-participant:hover { background: var(--bark-mid); }
+
+  /* MAIN CONTENT */
+  main { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem 0; }
+
+  /* SECTION TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 7px;
+    background: none;
+    font-family: inherit;
+    font-size: 0.87rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn.active {
+    background: var(--bark);
+    color: var(--foam);
+  }
+
+  /* BEER SETUP */
+  #setup-section, #tasting-section, #results-section { display: none; }
+  #setup-section.visible, #tasting-section.visible, #results-section.visible { display: block; }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 1.25rem;
+    color: var(--bark);
+  }
+
+  .beer-setup-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .beer-setup-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .beer-number {
+    width: 28px; height: 28px;
+    background: var(--amber-light);
+    color: var(--amber);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .beer-setup-row input {
+    flex: 1;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text);
+    outline: none;
+  }
+  .beer-setup-row input::placeholder { color: var(--text-muted); }
+  .remove-beer {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 1.2rem;
+    opacity: 0.5; transition: opacity 0.15s; padding: 0;
+    display: flex;
+  }
+  .remove-beer:hover { opacity: 1; }
+
+  .btn-add-beer {
+    display: flex; align-items: center; gap: 8px;
+    background: none;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+  }
+  .btn-add-beer:hover { border-color: var(--amber); color: var(--amber); }
+
+  .btn-primary {
+    background: var(--amber);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 12px 24px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 1rem;
+  }
+  .btn-primary:hover { background: #A86A08; }
+
+  /* TASTING CARDS */
+  #beer-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 1.25rem;
+    scrollbar-width: none;
+  }
+  #beer-tabs::-webkit-scrollbar { display: none; }
+  .beer-tab {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .beer-tab.active {
+    background: var(--bark);
+    color: var(--foam);
+    border-color: var(--bark);
+  }
+  .beer-tab.rated { border-color: var(--amber-mid); }
+
+  .tasting-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .card-beer-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--bark);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .beer-emoji { font-size: 1.8rem; }
+
+  .participant-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .p-tab {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: none;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .p-tab.active { background: var(--amber); color: white; border-color: var(--amber); }
+
+  .rating-section { margin-bottom: 1.25rem; }
+  .rating-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .stars {
+    display: flex;
+    gap: 6px;
+  }
+  .star {
+    font-size: 2rem;
+    cursor: pointer;
+    opacity: 0.25;
+    transition: opacity 0.1s, transform 0.1s;
+    user-select: none;
+    line-height: 1;
+  }
+  .star.lit { opacity: 1; }
+  .star:hover { transform: scale(1.15); }
+
+  textarea.notes {
+    width: 100%;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--text);
+    background: var(--foam);
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.5;
+  }
+  textarea.notes:focus { border-color: var(--amber); }
+  textarea.notes::placeholder { color: var(--text-muted); }
+
+  .save-note-btn {
+    margin-top: 8px;
+    background: none;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .save-note-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .saved-flash { color: var(--amber); font-size: 0.82rem; margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
+  .saved-flash.show { opacity: 1; }
+
+  /* RESULTS */
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 2rem; }
+  .result-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card.winner {
+    border-color: var(--amber-mid);
+    background: var(--amber-light);
+  }
+  .winner-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--amber);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .result-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--bark);
+    margin-bottom: 8px;
+    padding-right: 60px;
+  }
+  .result-avg {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .result-avg span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+  .result-stars { font-size: 1rem; margin-bottom: 10px; }
+  .result-breakdown { font-size: 0.8rem; color: var(--text-muted); line-height: 1.8; }
+
+  .comments-section { margin-top: 2rem; }
+  .comment-block {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 10px;
+  }
+  .comment-beer {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--bark);
+    margin-bottom: 8px;
+  }
+  .comment-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 0.87rem;
+  }
+  .comment-who { font-weight: 500; min-width: 90px; color: var(--text-muted); }
+  .comment-text { color: var(--text); font-style: italic; }
+
+  /* VOTE SECTION */
+  .vote-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .vote-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+  .vote-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .vote-bar-wrap {
+    flex: 1;
+    height: 10px;
+    background: var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .vote-bar {
+    height: 100%;
+    background: var(--amber-mid);
+    border-radius: 5px;
+    transition: width 0.4s ease;
+  }
+  .vote-bar.top { background: var(--amber); }
+  .vote-name { width: 130px; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vote-count { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); min-width: 30px; text-align: right; }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state p { font-size: 0.95rem; }
+
+  @media (max-width: 500px) {
+    header { padding: 2rem 1rem 1.5rem; }
+    main { padding: 1.25rem 1rem 0; }
+    .tasting-card { padding: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍺 Ölprovning</h1>
+</header>
+
+<div id="participant-bar">
+  <label>Deltagare:</label>
+  <input type="text" id="participant-input" placeholder="Ditt namn…" maxlength="24">
+  <button id="add-participant">+ Lägg till</button>
+  <div id="participant-chips"></div>
+</div>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('setup')">🍺 Ölval</button>
+    <button class="tab-btn" onclick="showTab('tasting')">✍️ Provning</button>
+    <button class="tab-btn" onclick="showTab('results')">🏆 Resultat</button>
+  </div>
+
+  <!-- SETUP -->
+  <section id="setup-section" class="visible">
+    <h2 class="section-title">Vilka öl provar ni?</h2>
+    <div class="beer-setup-list" id="beer-list"></div>
+    <button class="btn-add-beer" onclick="addBeer()">
+      <span style="font-size:1.2rem">+</span> Lägg till öl
+    </button>
+    <br>
+    <button class="btn-primary" onclick="showTab('tasting')">Starta provningen →</button>
+  </section>
+
+  <!-- TASTING -->
+  <section id="tasting-section">
+    <div id="beer-tabs"></div>
+    <div id="tasting-content"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results-section">
+    <h2 class="section-title">Sammanfattning</h2>
+    <div id="results-content"></div>
+  </section>
+</main>
+
+<script>
+let beers = [
+  { id: 1, name: '' },
+  { id: 2, name: '' },
+  { id: 3, name: '' },
+  { id: 4, name: '' },
+];
+let nextBeerId = 5;
+let participants = [];
+let activeParticipant = null;
+let ratings = {}; // { beerId: { participant: { stars, notes } } }
+let votes = {}; // { participant: beerId }
+let activeBeerTab = null;
+let activePTab = null;
+
+function saveState() {
+  try {
+    localStorage.setItem('olprovning', JSON.stringify({ beers, participants, activeParticipant, ratings, votes, nextBeerId }));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('olprovning');
+    if (s) {
+      const d = JSON.parse(s);
+      beers = d.beers || beers;
+      participants = d.participants || [];
+      activeParticipant = d.activeParticipant || null;
+      ratings = d.ratings || {};
+      votes = d.votes || {};
+      nextBeerId = d.nextBeerId || 5;
+    }
+  } catch(e) {}
+}
+
+// PARTICIPANTS
+function renderParticipants() {
+  const c = document.getElementById('participant-chips');
+  c.innerHTML = '';
+  participants.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (p === activeParticipant ? ' active' : '');
+    chip.innerHTML = `<span onclick="setActive('${p.replace(/'/g,"\\'")}')">👤 ${p}</span><button onclick="removeParticipant('${p.replace(/'/g,"\\'")}')">×</button>`;
+    c.appendChild(chip);
+  });
+}
+
+function setActive(name) {
+  activeParticipant = name;
+  activePTab = name;
+  renderParticipants();
+  if (document.getElementById('tasting-section').classList.contains('visible')) {
+    renderTasting();
+  }
+  saveState();
+}
+
+document.getElementById('add-participant').addEventListener('click', addParticipant);
+document.getElementById('participant-input').addEventListener('keydown', e => { if (e.key === 'Enter') addParticipant(); });
+
+function addParticipant() {
+  const inp = document.getElementById('participant-input');
+  const name = inp.value.trim();
+  if (!name || participants.includes(name)) { inp.value = ''; return; }
+  participants.push(name);
+  if (!activeParticipant) activeParticipant = name;
+  activePTab = activeParticipant;
+  inp.value = '';
+  renderParticipants();
+  saveState();
+}
+
+function removeParticipant(name) {
+  participants = participants.filter(p => p !== name);
+  if (activeParticipant === name) activeParticipant = participants[0] || null;
+  renderParticipants();
+  saveState();
+}
+
+// BEER SETUP
+function renderBeerSetup() {
+  const list = document.getElementById('beer-list');
+  list.innerHTML = '';
+  beers.forEach((b, i) => {
+    const row = document.createElement('div');
+    row.className = 'beer-setup-row';
+    row.innerHTML = `
+      <div class="beer-number">${i + 1}</div>
+      <input type="text" placeholder="Ölnamn (t.ex. Norrlands Guld)" value="${b.name}" oninput="updateBeerName(${b.id}, this.value)">
+      <button class="remove-beer" onclick="removeBeer(${b.id})" title="Ta bort">×</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateBeerName(id, name) {
+  const b = beers.find(x => x.id === id);
+  if (b) b.name = name;
+  saveState();
+}
+
+function addBeer() {
+  beers.push({ id: nextBeerId++, name: '' });
+  renderBeerSetup();
+  saveState();
+}
+
+function removeBeer(id) {
+  if (beers.length <= 1) return;
+  beers = beers.filter(b => b.id !== id);
+  renderBeerSetup();
+  saveState();
+}
+
+// TABS
+function showTab(tab) {
+  ['setup', 'tasting', 'results'].forEach(t => {
+    document.getElementById(t + '-section').classList.remove('visible');
+  });
+  document.getElementById(tab + '-section').classList.add('visible');
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['setup','tasting','results'][i] === tab);
+  });
+  if (tab === 'tasting') renderTasting();
+  if (tab === 'results') renderResults();
+}
+
+// TASTING
+function getBeerLabel(b) {
+  return b.name || `Öl ${beers.indexOf(b) + 1}`;
+}
+
+function renderTasting() {
+  const beerTabsEl = document.getElementById('beer-tabs');
+  const contentEl = document.getElementById('tasting-content');
+  const validBeers = beers.filter(b => true);
+
+  if (validBeers.length === 0) {
+    contentEl.innerHTML = '<div class="empty-state"><div class="icon">🍺</div><p>Lägg till öl under Ölval-fliken.</p></div>';
+    beerTabsEl.innerHTML = '';
+    return;
+  }
+
+  if (!activeBeerTab || !validBeers.find(b => b.id === activeBeerTab)) {
+    activeBeerTab = validBeers[0].id;
+  }
+
+  beerTabsEl.innerHTML = '';
+  validBeers.forEach(b => {
+    const hasRating = participants.some(p => ratings[b.id]?.[p]?.stars > 0);
+    const btn = document.createElement('button');
+    btn.className = 'beer-tab' + (b.id === activeBeerTab ? ' active' : '') + (hasRating ? ' rated' : '');
+    btn.textContent = getBeerLabel(b);
+    btn.onclick = () => { activeBeerTab = b.id; renderTasting(); };
+    beerTabsEl.appendChild(btn);
+  });
+
+  const beer = validBeers.find(b => b.id === activeBeerTab);
+  if (!beer) return;
+
+  if (!activePTab || !participants.includes(activePTab)) {
+    activePTab = activeParticipant || participants[0] || null;
+  }
+
+  let ptabsHtml = '';
+  if (participants.length > 0) {
+    ptabsHtml = `<div class="participant-tabs">` +
+      participants.map(p => `<button class="p-tab${p === activePTab ? ' active' : ''}" onclick="activePTab='${p.replace(/'/g,"\\'")}';renderTasting()">${p}</button>`).join('') +
+      `</div>`;
+  } else {
+    ptabsHtml = `<p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:1rem;">👆 Lägg till deltagare i fältet ovan</p>`;
+  }
+
+  const who = activePTab;
+  const r = who ? (ratings[beer.id]?.[who] || { stars: 0, notes: '' }) : null;
+  const currentStars = r ? r.stars : 0;
+  const currentNotes = r ? r.notes : '';
+
+  const starsHtml = [1,2,3,4,5].map(n =>
+    `<span class="star${currentStars >= n ? ' lit' : ''}" data-n="${n}" onclick="rateBeer(${beer.id},'${who?.replace(/'/g,"\\'") || ''}',${n})">⭐</span>`
+  ).join('');
+
+  contentEl.innerHTML = `
+    <div class="tasting-card">
+      <div class="card-beer-title">
+        <span class="beer-emoji">🍺</span>
+        ${getBeerLabel(beer)}
+      </div>
+      ${ptabsHtml}
+      ${who ? `
+        <div class="rating-section">
+          <div class="rating-label">Betyg</div>
+          <div class="stars">${starsHtml}</div>
+        </div>
+        <div class="rating-section">
+          <div class="rating-label">Kommentar</div>
+          <textarea class="notes" id="notes-area" placeholder="Doft, smak, helhetsintryck…">${currentNotes}</textarea>
+          <button class="save-note-btn" onclick="saveNote(${beer.id},'${who.replace(/'/g,"\\'")}')">Spara anteckning</button>
+          <span class="saved-flash" id="saved-flash">✓ Sparat</span>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function rateBeer(beerId, who, stars) {
+  if (!who) return;
+  if (!ratings[beerId]) ratings[beerId] = {};
+  if (!ratings[beerId][who]) ratings[beerId][who] = { stars: 0, notes: '' };
+  ratings[beerId][who].stars = stars;
+  saveState();
+  renderTasting();
+}
+
+function saveNote(beerId, who) {
+  const ta = document.getElementById('notes-area');
+  if (!ta) return;
+  if (!ratings[beerId]) ratings[beerId] = {};
+  if (!ratings[beerId][who]) ratings[beerId][who] = { stars: 0, notes: '' };
+  ratings[beerId][who].notes = ta.value;
+  saveState();
+  const flash = document.getElementById('saved-flash');
+  if (flash) { flash.classList.add('show'); setTimeout(() => flash.classList.remove('show'), 1500); }
+}
+
+// RESULTS
+function renderResults() {
+  const el = document.getElementById('results-content');
+  const validBeers = beers.filter(b => true);
+
+  if (validBeers.length === 0 || participants.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>Börja provningen och betygsätt ölen för att se resultat.</p></div>';
+    return;
+  }
+
+  const beerStats = validBeers.map(b => {
+    const rs = participants.map(p => ratings[b.id]?.[p]?.stars || 0).filter(x => x > 0);
+    const avg = rs.length ? rs.reduce((a,c) => a+c, 0) / rs.length : 0;
+    return { ...b, avg, count: rs.length };
+  }).sort((a, b) => b.avg - a.avg);
+
+  const maxAvg = beerStats[0]?.avg || 0;
+
+  // Vote count
+  const voteCounts = {};
+  validBeers.forEach(b => voteCounts[b.id] = 0);
+  Object.values(votes).forEach(bid => { if (voteCounts[bid] !== undefined) voteCounts[bid]++; });
+  const maxVotes = Math.max(...Object.values(voteCounts));
+
+  let html = '<div class="results-grid">';
+  beerStats.forEach((b, i) => {
+    const isWinner = i === 0 && b.avg > 0;
+    const starsLit = Math.round(b.avg);
+    const starsHtml = [1,2,3,4,5].map(n => `<span style="opacity:${starsLit >= n ? 1 : 0.2}">⭐</span>`).join('');
+    const breakdown = participants.map(p => {
+      const s = ratings[b.id]?.[p]?.stars;
+      return s ? `${p}: ${s}★` : `${p}: –`;
+    }).join(' · ');
+    html += `
+      <div class="result-card${isWinner ? ' winner' : ''}">
+        ${isWinner ? '<div class="winner-badge">🏆 Vinnare</div>' : ''}
+        <div class="result-name">${getBeerLabel(b)}</div>
+        <div class="result-avg">${b.avg > 0 ? b.avg.toFixed(1) : '–'}<span> / 5</span></div>
+        <div class="result-stars">${starsHtml}</div>
+        <div class="result-breakdown">${breakdown}</div>
+      </div>`;
+  });
+  html += '</div>';
+
+  // Comments
+  const hasComments = validBeers.some(b => participants.some(p => ratings[b.id]?.[p]?.notes));
+  if (hasComments) {
+    html += '<div class="comments-section"><h3 style="font-family:Playfair Display,serif;font-size:1.2rem;color:var(--bark);margin-bottom:1rem;">Kommentarer</h3>';
+    validBeers.forEach(b => {
+      const rows = participants.filter(p => ratings[b.id]?.[p]?.notes).map(p =>
+        `<div class="comment-row"><span class="comment-who">${p}</span><span class="comment-text">"${ratings[b.id][p].notes}"</span></div>`
+      ).join('');
+      if (rows) {
+        html += `<div class="comment-block"><div class="comment-beer">🍺 ${getBeerLabel(b)}</div>${rows}</div>`;
+      }
+    });
+    html += '</div>';
+  }
+
+  // Vote
+  html += `<div class="vote-section">
+    <h3 style="font-family:Playfair Display,serif;font-size:1.2rem;color:var(--bark);">🗳️ Rösta fram en vinnare</h3>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">Välj din personliga favorit (en röst per person)</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:1rem;">`;
+  validBeers.forEach(b => {
+    const isVoted = votes[activePTab] === b.id;
+    html += `<button onclick="castVote(${b.id})" style="padding:7px 14px;border-radius:8px;border:1.5px solid ${isVoted ? 'var(--amber)' : 'var(--border-strong)'};background:${isVoted ? 'var(--amber-light)' : 'none'};font-family:inherit;font-size:0.85rem;color:${isVoted ? 'var(--bark)' : 'var(--text-muted)'};cursor:pointer;font-weight:${isVoted ? '600' : '400'};">${isVoted ? '✓ ' : ''}${getBeerLabel(b)}</button>`;
+  });
+  html += `</div><div class="vote-grid" style="margin-top:1.25rem;">`;
+
+  const sortedVoteBeers = [...validBeers].sort((a,b) => (voteCounts[b.id]||0)-(voteCounts[a.id]||0));
+  const totalVotes = Object.values(voteCounts).reduce((a,c)=>a+c,0) || 1;
+  sortedVoteBeers.forEach(b => {
+    const cnt = voteCounts[b.id] || 0;
+    const pct = Math.round(cnt / totalVotes * 100);
+    const isTop = cnt === maxVotes && cnt > 0;
+    html += `<div class="vote-row">
+      <span class="vote-name">${getBeerLabel(b)}</span>
+      <div class="vote-bar-wrap"><div class="vote-bar${isTop ? ' top' : ''}" style="width:${pct}%"></div></div>
+      <span class="vote-count">${cnt}</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  el.innerHTML = html;
+}
+
+function castVote(beerId) {
+  if (!activePTab) return;
+  votes[activePTab] = beerId;
+  saveState();
+  renderResults();
+}
+
+// INIT
+loadState();
+renderBeerSetup();
+renderParticipants();
+</script>
+</body>
+</html>
